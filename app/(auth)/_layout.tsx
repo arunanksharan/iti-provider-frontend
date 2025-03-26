@@ -4,7 +4,7 @@
  */
 import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useAuth } from '../../app/store/auth-context';
+import { useAuth } from '@store/auth-context';
 
 export default function AuthLayout() {
   const { isAuthenticated, isLoading } = useAuth();

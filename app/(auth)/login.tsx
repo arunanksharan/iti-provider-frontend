@@ -5,13 +5,13 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import styled from 'styled-components/native';
-import { useAuth } from '../../app/store/auth-context';
-import EmailInput from '../../app/components/auth/EmailInput';
-import OTPVerification from '../../app/components/auth/OTPVerification';
+import { useAuth } from '@store/auth-context';
+import EmailInput from '@components/auth/EmailInput';
+import OTPVerification from '@components/auth/OTPVerification';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
-  background-color: ${props => props.theme.colors.background};
+  background-color: ${props => props.theme.colors?.background || '#F5F5F5'};
 `;
 
 const KeyboardView = styled(KeyboardAvoidingView)`
@@ -32,7 +32,7 @@ const Logo = styled.Image`
 `;
 
 const CardContainer = styled.View`
-  background-color: ${props => props.theme.colors.surface};
+  background-color: ${props => props.theme.colors?.surface || '#FFFFFF'};
   border-radius: 12px;
   padding: 16px;
   elevation: 4;
@@ -75,7 +75,7 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <LogoContainer>
-          <Logo source={require('../../app/assets/logo.png')} />
+          <Logo source={require('@assets/logo.png')} />
         </LogoContainer>
         
         <CardContainer>
