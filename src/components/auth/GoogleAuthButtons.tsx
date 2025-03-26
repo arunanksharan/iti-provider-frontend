@@ -1,6 +1,6 @@
 /**
  * Google authentication buttons component
- * Provides Sign In and Sign Up with Google options
+ * Provides Sign In with Google option and a Sign Up link
  */
 import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Alert, Linking } from 'react-native';
@@ -55,6 +55,25 @@ const ButtonText = styled.Text`
   font-weight: 500;
 `;
 
+const SignUpContainer = styled.View`
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin-top: 16px;
+`;
+
+const SignUpText = styled.Text`
+  font-size: 14px;
+  color: #757575;
+`;
+
+const SignUpLink = styled.Text`
+  font-size: 14px;
+  color: #1976D2;
+  font-weight: 500;
+  margin-left: 4px;
+`;
+
 // Backend API base URL
 const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://localhost:8000/api/v1';
 
@@ -68,6 +87,7 @@ const GoogleAuthButtons: React.FC<GoogleAuthButtonsProps> = ({ mode = 'both' }) 
     signin: false,
     signup: false
   });
+  const [isSignUp, setIsSignUp] = useState(false);
 
   // Handle Google Sign In
   const handleGoogleSignIn = async () => {
@@ -113,6 +133,20 @@ const GoogleAuthButtons: React.FC<GoogleAuthButtonsProps> = ({ mode = 'both' }) 
     }
   };
 
+  // Toggle between sign in and sign up
+  const toggleSignUp = () => {
+    setIsSignUp(!isSignUp);
+  };
+
+  // Handle authentication based on current mode
+  const handleAuthentication = () => {
+    if (isSignUp) {
+      handleGoogleSignUp();
+    } else {
+      handleGoogleSignIn();
+    }
+  };
+
   return (
     <Container>
       <Divider>
@@ -121,33 +155,24 @@ const GoogleAuthButtons: React.FC<GoogleAuthButtonsProps> = ({ mode = 'both' }) 
         <DividerLine />
       </Divider>
 
-      {(mode === 'signin' || mode === 'both') && (
-        <GoogleButton 
-          onPress={handleGoogleSignIn}
-          disabled={isLoading || localLoading.signin || localLoading.signup}
-        >
-          {localLoading.signin ? (
-            <ActivityIndicator size="small" color="#4285F4" style={{ marginRight: 12 }} />
-          ) : (
-            <GoogleIcon source={require('../../../assets/google-icon.png')} />
-          )}
-          <ButtonText>Sign in with Google</ButtonText>
-        </GoogleButton>
-      )}
+      <GoogleButton 
+        onPress={handleAuthentication}
+        disabled={isLoading || localLoading.signin || localLoading.signup}
+      >
+        {(localLoading.signin || localLoading.signup) ? (
+          <ActivityIndicator size="small" color="#4285F4" style={{ marginRight: 12 }} />
+        ) : (
+          <GoogleIcon source={require('../../../assets/google-icon.png')} />
+        )}
+        <ButtonText>{isSignUp ? 'Sign up with Google' : 'Sign in with Google'}</ButtonText>
+      </GoogleButton>
 
-      {(mode === 'signup' || mode === 'both') && (
-        <GoogleButton 
-          onPress={handleGoogleSignUp}
-          disabled={isLoading || localLoading.signin || localLoading.signup}
-        >
-          {localLoading.signup ? (
-            <ActivityIndicator size="small" color="#4285F4" style={{ marginRight: 12 }} />
-          ) : (
-            <GoogleIcon source={require('../../../assets/google-icon.png')} />
-          )}
-          <ButtonText>Sign up with Google</ButtonText>
-        </GoogleButton>
-      )}
+      <SignUpContainer>
+        <SignUpText>{isSignUp ? 'Already have an account?' : 'Don\'t have an account?'}</SignUpText>
+        <TouchableOpacity onPress={toggleSignUp}>
+          <SignUpLink>{isSignUp ? 'Sign in' : 'Sign up'}</SignUpLink>
+        </TouchableOpacity>
+      </SignUpContainer>
     </Container>
   );
 };
