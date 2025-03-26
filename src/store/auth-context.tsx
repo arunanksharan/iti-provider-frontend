@@ -12,6 +12,8 @@ interface AuthContextType {
   error: string | null;
   requestOTP: (email: string) => Promise<void>;
   verifyOTP: (email: string, otp: string) => Promise<void>;
+  googleSignIn: (token: string) => Promise<void>;
+  googleSignUp: (token: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -83,6 +85,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const googleSignIn = async (token: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      await authService.googleSignIn(token);
+      setIsAuthenticated(true);
+      
+      // Navigate to home screen after successful authentication
+      router.replace('/');
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign in with Google');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const googleSignUp = async (token: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      await authService.googleSignUp(token);
+      setIsAuthenticated(true);
+      
+      // Navigate to home screen after successful authentication
+      router.replace('/');
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign up with Google');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async (): Promise<void> => {
     try {
       setIsLoading(true);
@@ -90,7 +126,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(false);
       
       // Navigate to login screen after logout
-      router.replace('/auth/login');
+      router.replace('/(auth)/login');
     } catch (err: any) {
       setError(err.message || 'Failed to logout');
       console.error('Logout error:', err);
@@ -109,6 +145,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     error,
     requestOTP,
     verifyOTP,
+    googleSignIn,
+    googleSignUp,
     logout,
     clearError,
   };

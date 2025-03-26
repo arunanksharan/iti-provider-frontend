@@ -13,6 +13,10 @@ export interface OTPVerifyPayload {
   otp: string;
 }
 
+export interface GoogleAuthPayload {
+  token: string;
+}
+
 export interface AuthResponse {
   access_token: string;
   token_type: string;
@@ -46,6 +50,44 @@ class AuthService {
   public async verifyOTP(email: string, otp: string): Promise<AuthResponse> {
     const payload: OTPVerifyPayload = { email, otp };
     const response = await apiService.post<AuthResponse>('/auth/verify-otp', payload);
+    
+    // Store authentication tokens
+    if (response.access_token) {
+      await apiService.setTokens(
+        response.access_token,
+        response.refresh_token || response.access_token
+      );
+    }
+    
+    return response;
+  }
+
+  /**
+   * Sign in with Google
+   * @param token Google OAuth token received from Google Sign In
+   */
+  public async googleSignIn(token: string): Promise<AuthResponse> {
+    const payload: GoogleAuthPayload = { token };
+    const response = await apiService.post<AuthResponse>('/auth/google-signin', payload);
+    
+    // Store authentication tokens
+    if (response.access_token) {
+      await apiService.setTokens(
+        response.access_token,
+        response.refresh_token || response.access_token
+      );
+    }
+    
+    return response;
+  }
+
+  /**
+   * Sign up with Google
+   * @param token Google OAuth token received from Google Sign In
+   */
+  public async googleSignUp(token: string): Promise<AuthResponse> {
+    const payload: GoogleAuthPayload = { token };
+    const response = await apiService.post<AuthResponse>('/auth/google-signup', payload);
     
     // Store authentication tokens
     if (response.access_token) {
