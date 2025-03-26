@@ -2,223 +2,262 @@
  * OTP verification component for authentication
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TextInput as RNTextInput, NativeSyntheticEvent, TextInputKeyPressEventData } from 'react-native';
-import { Text, Button, HelperText } from 'react-native-paper';
-import styled from 'styled-components/native';
-import authService from '../../services/auth';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';
+import { AUTH_ENDPOINTS } from '../../constants/api';
 
-const Container = styled.View`
-  padding: 16px;
-`;
+// Define the form schema using zod
+const otpSchema = z.object({
+  otp: z.string().length(6, 'OTP must be 6 digits').regex(/^\d+$/, 'OTP must contain only numbers'),
+});
 
-const Title = styled.Text`
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 8px;
-`;
-
-const Description = styled.Text`
-  font-size: 16px;
-  color: #757575;
-  margin-bottom: 24px;
-`;
-
-const OTPContainer = styled.View`
-  flex-direction: row;
-  justify-content: space-between;
-  margin-bottom: 16px;
-`;
-
-const OTPInput = styled(RNTextInput)`
-  width: 48px;
-  height: 48px;
-  border-width: 1px;
-  border-radius: 8px;
-  text-align: center;
-  font-size: 20px;
-  margin-horizontal: 4px;
-`;
-
-const ResendContainer = styled.View`
-  flex-direction: row;
-  align-items: center;
-  margin-top: 16px;
-  margin-bottom: 24px;
-`;
-
-const ResendText = styled.Text`
-  font-size: 14px;
-  color: #757575;
-`;
-
-const ResendButton = styled.TouchableOpacity`
-  margin-left: 8px;
-`;
-
-const ResendButtonText = styled.Text`
-  font-size: 14px;
-  color: #1976D2;
-  font-weight: bold;
-`;
-
-const ButtonContainer = styled.View`
-  margin-top: 16px;
-`;
-
-const BackButton = styled.TouchableOpacity`
-  margin-top: 16px;
-  align-self: center;
-`;
-
-const BackButtonText = styled.Text`
-  font-size: 14px;
-  color: #757575;
-  text-decoration: underline;
-`;
+type OTPFormData = z.infer<typeof otpSchema>;
 
 interface OTPVerificationProps {
   email: string;
-  onResendOTP: () => void;
-  onBackToEmail: () => void;
+  onSuccess: (token: string) => void;
+  onError: (error: string) => void;
+  onBack: () => void;
 }
 
-const OTPVerification: React.FC<OTPVerificationProps> = ({
-  email,
-  onResendOTP,
-  onBackToEmail,
-}) => {
-  const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
-  const [otpError, setOtpError] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const [countdown, setCountdown] = useState<number>(30);
-  const inputRefs = useRef<(RNTextInput | null)[]>([]);
+const OTPVerification: React.FC<OTPVerificationProps> = ({ email, onSuccess, onError, onBack }) => {
+  const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const { control, handleSubmit, formState: { errors }, setValue } = useForm<OTPFormData>({
+    resolver: zodResolver(otpSchema),
+    defaultValues: {
+      otp: '',
+    },
+  });
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-    }
+    // Start countdown for resend button
+    setCountdown(60);
+    startCountdown();
+
     return () => {
-      if (timer) clearInterval(timer);
+      // Clear timer on component unmount
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
     };
-  }, [countdown]);
+  }, []);
 
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const startCountdown = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    timerRef.current = setInterval(() => {
+      setCountdown((prevCountdown) => {
+        if (prevCountdown <= 1) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+          }
+          return 0;
+        }
+        return prevCountdown - 1;
+      });
+    }, 1000);
   };
 
-  const handleOtpChange = (text: string, index: number) => {
-    if (text.length > 1) {
-      // Only take the first character if multiple are pasted
-      text = text.charAt(0);
-    }
-
-    // Validate input is a number
-    if (text && !/^\d+$/.test(text)) {
-      return;
-    }
-
-    setOtpError('');
-    const newOtp = [...otp];
-    newOtp[index] = text;
-    setOtp(newOtp);
-
-    // Auto-focus next input
-    if (text && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-
-    // Check if OTP is complete
-    if (newOtp.every((digit) => digit !== '') && newOtp.join('').length === 6) {
-      verifyOTP(newOtp.join(''));
-    }
-  };
-
-  const handleKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
-      // Move to previous input on backspace if current is empty
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleResendOTP = () => {
-    if (countdown === 0) {
-      onResendOTP();
-      setCountdown(30);
-    }
-  };
-
-  const verifyOTP = async (code: string) => {
+  const onSubmit = async (data: OTPFormData) => {
+    setLoading(true);
     try {
-      setIsLoading(true);
-      setError('');
-      await authService.verifyOTP(email, code);
-      // OTP verification successful - handled by parent component
-    } catch (err: any) {
-      setError(err.message || 'Failed to verify OTP. Please try again.');
+      // Verify OTP with the backend
+      const response = await axios.post(AUTH_ENDPOINTS.VERIFY_OTP, {
+        email,
+        otp: data.otp,
+      });
+
+      // Store token in secure storage
+      const token = response.data.access_token;
+      await SecureStore.setItemAsync('auth_token', token);
+      
+      // Call success callback
+      onSuccess(token);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        onError(error.response.data.detail || 'Failed to verify OTP. Please try again.');
+      } else {
+        onError('Network error. Please check your connection and try again.');
+      }
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    if (countdown > 0) return;
+    
+    setResendLoading(true);
+    try {
+      // Request new OTP
+      await axios.post(AUTH_ENDPOINTS.REQUEST_OTP, {
+        email,
+      });
+      
+      // Reset countdown
+      setCountdown(60);
+      startCountdown();
+      
+      // Clear OTP input
+      setValue('otp', '');
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        // Handle rate limiting error
+        if (error.response.status === 429) {
+          onError('Too many OTP requests. Please try again later.');
+        } else {
+          onError(error.response.data.detail || 'Failed to resend OTP. Please try again.');
+        }
+      } else {
+        onError('Network error. Please check your connection and try again.');
+      }
+    } finally {
+      setResendLoading(false);
     }
   };
 
   return (
-    <Container>
-      <Title>Verify Your Email</Title>
-      <Description>
+    <View style={styles.container}>
+      <Text style={styles.title}>Enter verification code</Text>
+      <Text style={styles.subtitle}>
         We've sent a 6-digit verification code to {email}
-      </Description>
-
-      <OTPContainer>
-        {otp.map((digit, index) => (
-          <OTPInput
-            key={index}
-            ref={(ref: RNTextInput | null) => (inputRefs.current[index] = ref)}
-            value={digit}
-            onChangeText={(text) => handleOtpChange(text, index)}
-            onKeyPress={(e) => handleKeyPress(e, index)}
+      </Text>
+      
+      <Controller
+        control={control}
+        name="otp"
+        render={({ field: { onChange, value, onBlur } }) => (
+          <TextInput
+            style={[styles.input, errors.otp && styles.inputError]}
+            placeholder="6-digit code"
             keyboardType="number-pad"
-            maxLength={1}
-            autoFocus={index === 0}
-            style={{ borderColor: otpError ? '#F44336' : '#BDBDBD' }}
+            maxLength={6}
+            value={value}
+            onChangeText={onChange}
+            onBlur={onBlur}
+            editable={!loading}
+            autoFocus
           />
-        ))}
-      </OTPContainer>
-
-      {!!otpError && <HelperText type="error">{otpError}</HelperText>}
-      {!!error && <HelperText type="error">{error}</HelperText>}
-
-      <ResendContainer>
-        <ResendText>
-          {countdown > 0 ? `Resend code in ${formatTime(countdown)}` : "Didn't receive the code?"}
-        </ResendText>
-        {countdown === 0 && (
-          <ResendButton onPress={handleResendOTP}>
-            <ResendButtonText>Resend</ResendButtonText>
-          </ResendButton>
         )}
-      </ResendContainer>
-
-      <ButtonContainer>
-        <Button
-          mode="contained"
-          onPress={() => verifyOTP(otp.join(''))}
-          loading={isLoading}
-          disabled={isLoading || otp.join('').length !== 6}
+      />
+      
+      {errors.otp && (
+        <Text style={styles.errorText}>{errors.otp.message}</Text>
+      )}
+      
+      <TouchableOpacity
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={handleSubmit(onSubmit)}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#ffffff" />
+        ) : (
+          <Text style={styles.buttonText}>Verify</Text>
+        )}
+      </TouchableOpacity>
+      
+      <View style={styles.resendContainer}>
+        <TouchableOpacity 
+          onPress={handleResendOTP} 
+          disabled={countdown > 0 || resendLoading}
         >
-          Verify
-        </Button>
-      </ButtonContainer>
-
-      <BackButton onPress={onBackToEmail}>
-        <BackButtonText>Back to Email</BackButtonText>
-      </BackButton>
-    </Container>
+          <Text style={[
+            styles.resendText, 
+            (countdown > 0 || resendLoading) && styles.resendTextDisabled
+          ]}>
+            {resendLoading ? 'Sending...' : 'Resend code'}
+            {countdown > 0 && ` (${countdown}s)`}
+          </Text>
+        </TouchableOpacity>
+      </View>
+      
+      <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <Text style={styles.backButtonText}>Use a different email</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    width: '100%',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    fontSize: 16,
+    textAlign: 'center',
+    letterSpacing: 8,
+  },
+  inputError: {
+    borderColor: '#ff3b30',
+  },
+  errorText: {
+    color: '#ff3b30',
+    marginBottom: 15,
+  },
+  button: {
+    backgroundColor: '#007aff',
+    height: 50,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#a0c4ff',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  resendContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  resendText: {
+    color: '#007aff',
+    fontSize: 16,
+  },
+  resendTextDisabled: {
+    color: '#999',
+  },
+  backButton: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  backButtonText: {
+    color: '#666',
+    fontSize: 16,
+  },
+});
 
 export default OTPVerification;
