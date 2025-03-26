@@ -16,7 +16,6 @@
     "@types/styled-components": "^5.1.34",
     "axios": "^1.8.4",
     "expo": "~52.0.40",
-    "expo-auth-session": "~5.8.1",
     "expo-constants": "^17.0.8",
     "expo-font": "^13.0.4",
     "expo-linking": "^7.0.5",
