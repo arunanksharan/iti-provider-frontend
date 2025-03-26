@@ -19,5 +19,24 @@ export const PROVIDER_ENDPOINTS = {
   UPDATE_PROFILE: `${API_URL}/providers/me`,
 };
 
+// Job posting endpoints
+export const JOB_POSTING_ENDPOINTS = {
+  LIST: `${API_URL}/job-postings`,
+  DETAIL: (id: number) => `${API_URL}/job-postings/${id}`,
+  CREATE: `${API_URL}/job-postings`,
+  UPDATE: (id: number) => `${API_URL}/job-postings/${id}`,
+  UPDATE_STATUS: (id: number) => `${API_URL}/job-postings/${id}/status`,
+  BROADCAST: (id: number) => `${API_URL}/job-postings/${id}/broadcast`,
+};
+
+// Application endpoints
+export const APPLICATION_ENDPOINTS = {
+  LIST: `${API_URL}/applications`,
+  DETAIL: (id: number) => `${API_URL}/applications/${id}`,
+  UPDATE_STATUS: (id: number) => `${API_URL}/applications/${id}/status`,
+  ADD_FEEDBACK: (id: number) => `${API_URL}/applications/${id}/feedback`,
+  GET_FEEDBACK: (id: number) => `${API_URL}/applications/${id}/feedback`,
+};
+
 // Default request timeout in milliseconds
 export const REQUEST_TIMEOUT = 10000;
