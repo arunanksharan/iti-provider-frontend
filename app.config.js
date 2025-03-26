@@ -9,33 +9,28 @@ module.exports = {
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
   splash: {
-    image: './assets/splash.png',
+    image: './assets/splash-icon.png',
     resizeMode: 'contain',
-    backgroundColor: '#ffffff'
+    backgroundColor: '#ffffff',
   },
-  assetBundlePatterns: [
-    '**/*'
-  ],
+  assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.kuzushilabs.providerfrontend',
-    scheme: 'provider-frontend'
+    scheme: 'provider-frontend',
   },
   android: {
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#ffffff'
+      backgroundColor: '#ffffff',
     },
     package: 'com.kuzushilabs.providerfrontend',
-    scheme: 'provider-frontend'
+    scheme: 'provider-frontend',
   },
   web: {
-    favicon: './assets/favicon.png'
+    favicon: './assets/favicon.png',
   },
-  plugins: [
-    'expo-router',
-    'expo-secure-store'
-  ],
+  plugins: ['expo-router', 'expo-secure-store'],
   scheme: 'provider-frontend',
   extra: {
     apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:8000/api/v1',
@@ -43,7 +38,9 @@ module.exports = {
     authTokenKey: process.env.AUTH_TOKEN_KEY || 'auth_token',
     authRefreshTokenKey: process.env.AUTH_REFRESH_TOKEN_KEY || 'refresh_token',
     eas: {
-      projectId: process.env.EAS_PROJECT_ID || ''
-    }
-  }
+      projectId: process.env.EAS_PROJECT_ID || '',
+    },
+  },
+  // Enable React Native's New Architecture
+  newArchEnabled: true,
 };

@@ -27,15 +27,15 @@ export default function RootLayout() {
       <AuthProvider>
         <ThemeProvider>
           <StatusBar style="auto" />
-          <AuthGuard />
+          <RootLayoutNav />
         </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
 }
 
-// Auth guard component to handle protected routes
-function AuthGuard() {
+// Root layout navigation component
+function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
@@ -76,14 +76,5 @@ function AuthGuard() {
     }
   }, [isAuthenticated, segments, isLoading]);
 
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: 'slide_from_right',
-      }}
-    >
-      <Slot />
-    </Stack>
-  );
+  return <Slot />;
 }
