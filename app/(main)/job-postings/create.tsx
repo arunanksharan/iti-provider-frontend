@@ -9,7 +9,7 @@ import { router } from 'expo-router';
 import styled from 'styled-components/native';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import JobPostingForm from '@components/job-posting/JobPostingForm';
-import jobPostingService, { JobPostingCreatePayload } from '@services/job-posting';
+import jobPostingService, { JobPostingCreatePayload, JobPostingUpdatePayload } from '@services/job-posting';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
@@ -45,8 +45,9 @@ export default function CreateJobPostingScreen() {
     },
   });
 
-  const handleSubmit = async (data: JobPostingCreatePayload) => {
-    await createMutation.mutateAsync(data);
+  const handleSubmit = async (data: JobPostingCreatePayload | JobPostingUpdatePayload) => {
+    // Since this is the create screen, we know it's a create payload
+    await createMutation.mutateAsync(data as JobPostingCreatePayload);
   };
 
   return (

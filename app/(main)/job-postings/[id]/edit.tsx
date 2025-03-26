@@ -13,7 +13,7 @@ import jobPostingService, { JobPostingUpdatePayload } from '@services/job-postin
 
 const Container = styled(SafeAreaView)`
   flex: 1;
-  background-color: ${props => props.theme.colors?.background || '#F5F5F5'};
+  background-color: #F5F5F5;
 `;
 
 const Content = styled.ScrollView`
@@ -39,7 +39,7 @@ const ErrorText = styled(Text)`
   text-align: center;
   margin-bottom: 16px;
   font-size: 16px;
-  color: ${props => props.theme.colors?.error || '#FF0000'};
+  color: #FF0000;
 `;
 
 export default function EditJobPostingScreen() {

@@ -6,7 +6,7 @@ import React, { useEffect } from 'react';
 import { Tabs, useRouter, useSegments } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
-import { useAuth } from '../../app/store/auth-context';
+import { useAuth } from '@store/auth-context';
 
 export default function MainLayout() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -59,7 +59,7 @@ export default function MainLayout() {
         }}
       />
       <Tabs.Screen
-        name="job-postings"
+        name="job-postings/index"
         options={{
           title: 'Job Postings',
           tabBarIcon: ({ color, size }) => (
@@ -68,7 +68,7 @@ export default function MainLayout() {
         }}
       />
       <Tabs.Screen
-        name="applications"
+        name="applications/index"
         options={{
           title: 'Applications',
           tabBarIcon: ({ color, size }) => (

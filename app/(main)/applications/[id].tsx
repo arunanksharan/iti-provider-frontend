@@ -291,17 +291,17 @@ export default function ApplicationDetailScreen() {
               
               <MetaRow>
                 <MetaLabel>Skills:</MetaLabel>
-                <MetaValue>{application.skills.join(', ')}</MetaValue>
+                <MetaValue>{application.skills?.join(', ') || 'N/A'}</MetaValue>
               </MetaRow>
               
               <MetaRow>
                 <MetaLabel>Expected Salary:</MetaLabel>
-                <MetaValue>₹{application.expected_salary.toLocaleString()}</MetaValue>
+                <MetaValue>₹{application.expected_salary ? application.expected_salary.toLocaleString() : 'N/A'}</MetaValue>
               </MetaRow>
               
               <MetaRow>
                 <MetaLabel>Notice Period:</MetaLabel>
-                <MetaValue>{application.notice_period} days</MetaValue>
+                <MetaValue>{application.notice_period || 'N/A'} {application.notice_period ? 'days' : ''}</MetaValue>
               </MetaRow>
             </MetaContainer>
           </HeaderCardContent>

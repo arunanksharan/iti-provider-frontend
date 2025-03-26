@@ -13,19 +13,19 @@ import jobPostingService, { JobPosting } from '@services/job-posting';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
-  background-color: ${props => props.theme.colors?.background || '#F5F5F5'};
+  background-color: #F5F5F5;
 `;
 
-const Content = styled.View`
+const Content = styled(View)`
   flex: 1;
   padding: 16px;
 `;
 
-const SearchContainer = styled.View`
+const SearchContainer = styled(View)`
   margin-bottom: 16px;
 `;
 
-const FilterContainer = styled.View`
+const FilterContainer = styled(View)`
   flex-direction: row;
   flex-wrap: wrap;
   margin-bottom: 16px;
@@ -50,14 +50,14 @@ const JobTitle = styled(Text)`
   margin-bottom: 4px;
 `;
 
-const JobMeta = styled.View`
+const JobMeta = styled(View)`
   flex-direction: row;
   flex-wrap: wrap;
   margin-top: 8px;
   margin-bottom: 8px;
 `;
 
-const JobMetaItem = styled.View`
+const JobMetaItem = styled(View)`
   flex-direction: row;
   align-items: center;
   margin-right: 16px;
@@ -73,7 +73,7 @@ const StatusChip = styled(Chip)`
   align-self: flex-start;
 `;
 
-const EmptyContainer = styled.View`
+const EmptyContainer = styled(View)`
   flex: 1;
   justify-content: center;
   align-items: center;
@@ -86,7 +86,7 @@ const EmptyText = styled(Text)`
   font-size: 16px;
 `;
 
-const LoadingContainer = styled.View`
+const LoadingContainer = styled(View)`
   flex: 1;
   justify-content: center;
   align-items: center;

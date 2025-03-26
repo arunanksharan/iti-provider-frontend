@@ -14,10 +14,10 @@ import applicationService from '@services/application';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
-  background-color: ${props => props.theme.colors.background};
+  background-color: #F5F5F5;
 `;
 
-const Content = styled.ScrollView`
+const Content = styled(ScrollView)`
   flex: 1;
   padding: 16px;
 `;
@@ -40,11 +40,11 @@ const JobDescription = styled(Text)`
   margin-bottom: 16px;
 `;
 
-const MetaContainer = styled.View`
+const MetaContainer = styled(View)`
   margin-bottom: 16px;
 `;
 
-const MetaRow = styled.View`
+const MetaRow = styled(View)`
   flex-direction: row;
   align-items: center;
   margin-bottom: 8px;
@@ -74,7 +74,7 @@ const SectionTitle = styled(Text)`
   margin-bottom: 8px;
 `;
 
-const ActionButtonsContainer = styled.View`
+const ActionButtonsContainer = styled(View)`
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -87,14 +87,14 @@ const ActionButton = styled(Button)`
   width: 48%;
 `;
 
-const LoadingContainer = styled.View`
+const LoadingContainer = styled(View)`
   flex: 1;
   justify-content: center;
   align-items: center;
   padding: 32px;
 `;
 
-const ErrorContainer = styled.View`
+const ErrorContainer = styled(View)`
   flex: 1;
   justify-content: center;
   align-items: center;

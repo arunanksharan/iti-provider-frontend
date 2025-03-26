@@ -16,7 +16,7 @@ import companyProfileService, {
 
 const Container = styled(SafeAreaView)`
   flex: 1;
-  background-color: ${props => props.theme.colors?.background || '#F5F5F5'};
+  background-color: #F5F5F5;
 `;
 
 const Content = styled.ScrollView`
