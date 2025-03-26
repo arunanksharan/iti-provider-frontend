@@ -42,7 +42,6 @@ module.exports = {
     apiTimeout: process.env.API_TIMEOUT || '30000',
     authTokenKey: process.env.AUTH_TOKEN_KEY || 'auth_token',
     authRefreshTokenKey: process.env.AUTH_REFRESH_TOKEN_KEY || 'refresh_token',
-    googleClientId: process.env.GOOGLE_CLIENT_ID || '',
     eas: {
       projectId: process.env.EAS_PROJECT_ID || ''
     }
