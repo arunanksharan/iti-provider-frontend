@@ -130,7 +130,9 @@ class ApiService {
         }
 
         // Handle other errors
-        const message = error.response?.data?.message || error.message || 'An error occurred';
+        const errorData = error.response?.data as { message?: string } || {};
+        const message = errorData.message || 
+                       ((error as any).message ? (error as any).message : 'An error occurred');
         const status = error.response?.status || 500;
         const data = error.response?.data;
         
@@ -231,7 +233,9 @@ class ApiService {
       throw error;
     }
     
-    const message = error.message || 'An error occurred';
+    const errorData = error.response?.data as { message?: string } || {};
+    const message = errorData.message || 
+                   ((error as any).message ? (error as any).message : 'An error occurred');
     const status = error.response?.status || 500;
     const data = error.response?.data;
     

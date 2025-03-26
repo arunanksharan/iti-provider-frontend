@@ -2,10 +2,10 @@
  * OTP verification component for authentication
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TextInput as RNTextInput } from 'react-native';
-import { Button, Text, HelperText } from 'react-native-paper';
+import { View, StyleSheet, TextInput as RNTextInput, NativeSyntheticEvent, TextInputKeyPressEventData } from 'react-native';
+import { Text, Button, HelperText } from 'react-native-paper';
 import styled from 'styled-components/native';
-import { useAuth } from '../../store/auth-context';
+import authService from '../../services/auth';
 
 const Container = styled.View`
   padding: 16px;
@@ -14,25 +14,24 @@ const Container = styled.View`
 const Title = styled.Text`
   font-size: 24px;
   font-weight: bold;
-  margin-bottom: 24px;
-  text-align: center;
+  margin-bottom: 8px;
 `;
 
 const Description = styled.Text`
   font-size: 16px;
+  color: #757575;
   margin-bottom: 24px;
-  text-align: center;
 `;
 
 const OTPContainer = styled.View`
   flex-direction: row;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 `;
 
-const OTPInput = styled.TextInput`
+const OTPInput = styled(RNTextInput)`
   width: 48px;
-  height: 56px;
+  height: 48px;
   border-width: 1px;
   border-radius: 8px;
   text-align: center;
@@ -42,20 +41,39 @@ const OTPInput = styled.TextInput`
 
 const ResendContainer = styled.View`
   flex-direction: row;
-  justify-content: center;
+  align-items: center;
   margin-top: 16px;
   margin-bottom: 24px;
 `;
 
 const ResendText = styled.Text`
-  margin-right: 8px;
+  font-size: 14px;
+  color: #757575;
 `;
 
-const ResendButton = styled.TouchableOpacity``;
+const ResendButton = styled.TouchableOpacity`
+  margin-left: 8px;
+`;
 
 const ResendButtonText = styled.Text`
-  color: ${props => props.theme.colors.primary};
+  font-size: 14px;
+  color: #1976D2;
   font-weight: bold;
+`;
+
+const ButtonContainer = styled.View`
+  margin-top: 16px;
+`;
+
+const BackButton = styled.TouchableOpacity`
+  margin-top: 16px;
+  align-self: center;
+`;
+
+const BackButtonText = styled.Text`
+  font-size: 14px;
+  color: #757575;
+  text-decoration: underline;
 `;
 
 interface OTPVerificationProps {
@@ -64,89 +82,87 @@ interface OTPVerificationProps {
   onBackToEmail: () => void;
 }
 
-export const OTPVerification: React.FC<OTPVerificationProps> = ({
+const OTPVerification: React.FC<OTPVerificationProps> = ({
   email,
   onResendOTP,
   onBackToEmail,
 }) => {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [otpError, setOtpError] = useState('');
-  const [countdown, setCountdown] = useState(300); // 5 minutes in seconds
-  const { isLoading, error, verifyOTP } = useAuth();
-  
-  const inputRefs = useRef<Array<RNTextInput | null>>([]);
+  const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
+  const [otpError, setOtpError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  const [countdown, setCountdown] = useState<number>(30);
+  const inputRefs = useRef<(RNTextInput | null)[]>([]);
 
-  // Set up countdown timer
   useEffect(() => {
-    if (countdown <= 0) return;
-    
-    const timer = setInterval(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
-    
-    return () => clearInterval(timer);
+    let timer: NodeJS.Timeout;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, [countdown]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleOtpChange = (text: string, index: number) => {
     if (text.length > 1) {
-      text = text[0]; // Only take the first character
+      // Only take the first character if multiple are pasted
+      text = text.charAt(0);
     }
-    
+
+    // Validate input is a number
+    if (text && !/^\d+$/.test(text)) {
+      return;
+    }
+
+    setOtpError('');
     const newOtp = [...otp];
     newOtp[index] = text;
     setOtp(newOtp);
-    
-    // Clear error when user types
-    if (otpError) setOtpError('');
-    
+
     // Auto-focus next input
     if (text && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
+
+    // Check if OTP is complete
+    if (newOtp.every((digit) => digit !== '') && newOtp.join('').length === 6) {
+      verifyOTP(newOtp.join(''));
+    }
   };
 
-  const handleKeyPress = (e: any, index: number) => {
-    // Handle backspace
+  const handleKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) => {
     if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
-      const newOtp = [...otp];
-      newOtp[index - 1] = '';
-      setOtp(newOtp);
+      // Move to previous input on backspace if current is empty
       inputRefs.current[index - 1]?.focus();
     }
   };
 
   const handleResendOTP = () => {
-    onResendOTP();
-    setCountdown(300); // Reset countdown
+    if (countdown === 0) {
+      onResendOTP();
+      setCountdown(30);
+    }
   };
 
-  const validateOTP = (): boolean => {
-    const otpString = otp.join('');
-    if (otpString.length !== 6) {
-      setOtpError('Please enter the complete 6-digit OTP');
-      return false;
-    }
-    if (!/^\d+$/.test(otpString)) {
-      setOtpError('OTP should contain only digits');
-      return false;
-    }
-    setOtpError('');
-    return true;
-  };
-
-  const handleSubmit = async () => {
-    if (validateOTP()) {
-      try {
-        await verifyOTP(email, otp.join(''));
-      } catch (err) {
-        // Error is handled by the auth context
-      }
+  const verifyOTP = async (code: string) => {
+    try {
+      setIsLoading(true);
+      setError('');
+      await authService.verifyOTP(email, code);
+      // OTP verification successful - handled by parent component
+    } catch (err: any) {
+      setError(err.message || 'Failed to verify OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -161,7 +177,7 @@ export const OTPVerification: React.FC<OTPVerificationProps> = ({
         {otp.map((digit, index) => (
           <OTPInput
             key={index}
-            ref={(ref) => (inputRefs.current[index] = ref)}
+            ref={(ref: RNTextInput | null) => (inputRefs.current[index] = ref)}
             value={digit}
             onChangeText={(text) => handleOtpChange(text, index)}
             onKeyPress={(e) => handleKeyPress(e, index)}
@@ -180,30 +196,27 @@ export const OTPVerification: React.FC<OTPVerificationProps> = ({
         <ResendText>
           {countdown > 0 ? `Resend code in ${formatTime(countdown)}` : "Didn't receive the code?"}
         </ResendText>
-        {countdown <= 0 && (
-          <ResendButton onPress={handleResendOTP} disabled={isLoading}>
+        {countdown === 0 && (
+          <ResendButton onPress={handleResendOTP}>
             <ResendButtonText>Resend</ResendButtonText>
           </ResendButton>
         )}
       </ResendContainer>
 
-      <Button
-        mode="contained"
-        onPress={handleSubmit}
-        loading={isLoading}
-        disabled={isLoading || otp.join('').length !== 6}
-      >
-        Verify
-      </Button>
+      <ButtonContainer>
+        <Button
+          mode="contained"
+          onPress={() => verifyOTP(otp.join(''))}
+          loading={isLoading}
+          disabled={isLoading || otp.join('').length !== 6}
+        >
+          Verify
+        </Button>
+      </ButtonContainer>
 
-      <Button
-        mode="text"
-        onPress={onBackToEmail}
-        disabled={isLoading}
-        style={{ marginTop: 16 }}
-      >
-        Change Email
-      </Button>
+      <BackButton onPress={onBackToEmail}>
+        <BackButtonText>Back to Email</BackButtonText>
+      </BackButton>
     </Container>
   );
 };

@@ -2,8 +2,8 @@
  * Company profile form component
  * Handles creating and updating company profiles
  */
-import React, { useState, ReactElement } from 'react';
-import { View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, ReactElement, ReactNode } from 'react';
+import { View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, ViewProps, TextProps } from 'react-native';
 import { TextInput, Button, HelperText, Divider, Text, ActivityIndicator } from 'react-native-paper';
 import styled from 'styled-components/native';
 import { CompanyProfileCreatePayload, CompanyProfileUpdatePayload, CompanyProfile } from '../../services/company-profile';
@@ -49,8 +49,8 @@ const VerificationContainer = styled(View)<VerificationProps>`
 // Create a properly typed styled component with the VerificationProps
 const VerificationText = styled(Text)<VerificationProps>`
   flex: 1;
-  margin-left: 8px;
   color: ${props => props.verified ? '#2E7D32' : '#E65100'};
+  font-weight: 500;
 `;
 
 interface CompanyProfileFormProps {
@@ -58,7 +58,7 @@ interface CompanyProfileFormProps {
   isLoading: boolean;
   error: string | null;
   onSubmit: (data: CompanyProfileCreatePayload | CompanyProfileUpdatePayload) => Promise<void>;
-  onVerifyGSTIN: (gstin: string) => Promise<{ valid: boolean; details?: any }>;
+  onVerifyGSTIN?: (gstin: string) => Promise<{ valid: boolean; details?: any }>;
 }
 
 const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
@@ -158,10 +158,10 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
 
     try {
       setVerifyingGstin(true);
-      const result = await onVerifyGSTIN(formData.gstin as string);
-      setGstinVerified(result.valid);
+      const result = await onVerifyGSTIN?.(formData.gstin as string);
+      setGstinVerified(result?.valid ?? false);
       
-      if (result.valid && result.details) {
+      if (result?.valid && result?.details) {
         // Auto-fill some fields based on GSTIN details if available
         const { name, address } = result.details;
         if (name && !formData.name) {
@@ -212,7 +212,7 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
             disabled={isLoading}
             right={
               <TextInput.Affix
-                text={verifyingGstin ? <ActivityIndicator size={16} /> as unknown as string : 'Verify'}
+                text={verifyingGstin ? "Verifying..." : 'Verify'}
                 textStyle={{ color: '#1976D2', fontWeight: 'bold' }}
                 onPress={handleVerifyGSTIN}
               />

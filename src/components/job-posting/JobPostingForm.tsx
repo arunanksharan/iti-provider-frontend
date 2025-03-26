@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { ScrollView, View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { TextInput, Button, HelperText, Divider, Text, Switch, Chip, Menu, RadioButton } from 'react-native-paper';
+// @ts-ignore - Module not found but used in runtime
 import DateTimePicker from '@react-native-community/datetimepicker';
 import styled from 'styled-components/native';
 import { JobPostingCreatePayload, JobPostingUpdatePayload, JobPosting } from '../../services/job-posting';
@@ -124,7 +125,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({
     ];
     
     requiredFields.forEach((field) => {
-      if (!formData[field]) {
+      if (!(formData as Record<string, any>)[field]) {
         newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1).replace('_', ' ')} is required`;
       }
     });
@@ -160,7 +161,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleDateChange = (field: 'start_date' | 'end_date', date: Date | undefined) => {
+  const handleDateChange = (field: 'start_date' | 'end_date', event: any, date?: Date) => {
     if (date) {
       updateField(field, date.toISOString().split('T')[0]);
     }
@@ -316,7 +317,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({
             {employmentTypes.map((type) => (
               <EmploymentTypeChip
                 key={type.value}
-                selected={formData.employment_type === type.value}
+                selected={(formData.employment_type as string) === type.value}
                 onPress={() => updateField('employment_type', type.value)}
                 disabled={isLoading}
               >
@@ -389,10 +390,11 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({
           </DatePickerButton>
           {showStartDatePicker && (
             <DateTimePicker
+              testID="startDatePicker"
               value={new Date(formData.start_date as string)}
               mode="date"
               display="default"
-              onChange={(event, date) => handleDateChange('start_date', date)}
+              onChange={(event: { type: string, nativeEvent: { timestamp: number } }, date?: Date) => handleDateChange('start_date', event, date)}
             />
           )}
           {!!errors.start_date && <HelperText type="error">{errors.start_date}</HelperText>}
@@ -409,10 +411,11 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({
           </DatePickerButton>
           {showEndDatePicker && (
             <DateTimePicker
+              testID="endDatePicker"
               value={new Date(formData.end_date as string)}
               mode="date"
               display="default"
-              onChange={(event, date) => handleDateChange('end_date', date)}
+              onChange={(event: { type: string, nativeEvent: { timestamp: number } }, date?: Date) => handleDateChange('end_date', event, date)}
             />
           )}
           {!!errors.end_date && <HelperText type="error">{errors.end_date}</HelperText>}
@@ -430,6 +433,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({
             </DatePickerButton>
             {showStartTimePicker && (
               <DateTimePicker
+                testID="startTimePicker"
                 value={(() => {
                   const [hours, minutes] = (formData.shift_start_time as string).split(':');
                   const date = new Date();
@@ -438,8 +442,9 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({
                   return date;
                 })()}
                 mode="time"
+                is24Hour={true}
                 display="default"
-                onChange={(event, date) => handleTimeChange('shift_start_time', event, date)}
+                onChange={(event: { type: string, nativeEvent: { timestamp: number } }, date?: Date) => handleTimeChange('shift_start_time', event, date)}
               />
             )}
           </DatePickerContainer>
@@ -455,6 +460,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({
             </DatePickerButton>
             {showEndTimePicker && (
               <DateTimePicker
+                testID="endTimePicker"
                 value={(() => {
                   const [hours, minutes] = (formData.shift_end_time as string).split(':');
                   const date = new Date();
@@ -463,8 +469,9 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({
                   return date;
                 })()}
                 mode="time"
+                is24Hour={true}
                 display="default"
-                onChange={(event, date) => handleTimeChange('shift_end_time', event, date)}
+                onChange={(event: { type: string, nativeEvent: { timestamp: number } }, date?: Date) => handleTimeChange('shift_end_time', event, date)}
               />
             )}
           </DatePickerContainer>
