@@ -15,7 +15,8 @@ module.exports = function(api) {
             '@theme': './src/theme',
             '@hooks': './src/hooks',
             '@utils': './src/utils',
-            '@types': './src/types'
+            '@types': './src/types',
+            '@assets': './assets'
           },
           extensions: ['.js', '.jsx', '.ts', '.tsx']
         }
