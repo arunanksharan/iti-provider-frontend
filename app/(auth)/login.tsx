@@ -8,6 +8,7 @@ import styled from 'styled-components/native';
 import { useAuth } from '@store/auth-context';
 import EmailInput from '@components/auth/EmailInput';
 import OTPVerification from '@components/auth/OTPVerification';
+import GoogleAuthButtons from '@components/auth/GoogleAuthButtons';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
@@ -80,7 +81,10 @@ export default function LoginScreen() {
         
         <CardContainer>
           {step === 'email' ? (
-            <EmailInput onEmailSubmit={handleEmailSubmit} />
+            <>
+              <EmailInput onEmailSubmit={handleEmailSubmit} />
+              <GoogleAuthButtons mode="both" />
+            </>
           ) : (
             <OTPVerification
               email={email}
