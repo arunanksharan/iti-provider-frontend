@@ -16,14 +16,13 @@ export interface JobApplication {
   additional_info: Record<string, any>;
   created_at: string;
   updated_at: string;
-  // Additional fields needed by components
   experience_years?: number;
   education?: string;
   skills?: string[];
   expected_salary?: number;
   notice_period?: string;
   additional_documents?: Array<{url: string, name: string}>;
-  feedback?: string;
+  feedback?: Array<{text: string, created_at: string}>;
 }
 
 export interface ApplicationQueryParams {
@@ -45,6 +44,11 @@ export interface ApplicationListResponse {
   page: number;
   limit: number;
   pages: number;
+}
+
+export interface FeedbackItem {
+  text: string;
+  created_at: string;
 }
 
 /**
@@ -73,7 +77,7 @@ class ApplicationService {
    * @param data Status update data
    */
   public async updateApplicationStatus(id: number, data: ApplicationStatusUpdatePayload): Promise<JobApplication> {
-    return apiService.patch<JobApplication>(`/applications/${id}/status`, data);
+    return apiService.put<JobApplication>(`/applications/${id}/status`, data);
   }
 
   /**
@@ -103,6 +107,23 @@ class ApplicationService {
       params: { format },
       responseType: 'blob',
     });
+  }
+
+  /**
+   * Add feedback to an application
+   * @param id Application ID
+   * @param feedback Feedback text
+   */
+  public async addFeedback(id: number, feedback: string): Promise<JobApplication> {
+    return apiService.put(`/applications/${id}/feedback`, { feedback });
+  }
+
+  /**
+   * Get feedback for an application
+   * @param id Application ID
+   */
+  public async getFeedback(id: number): Promise<FeedbackItem[]> {
+    return apiService.get<FeedbackItem[]>(`/applications/${id}/feedback`);
   }
 }
 

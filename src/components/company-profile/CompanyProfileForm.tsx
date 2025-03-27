@@ -36,22 +36,42 @@ interface VerificationProps {
   verified: boolean;
 }
 
-// Create a properly typed styled component with the VerificationProps
-const VerificationContainer = styled(View)<VerificationProps>`
-  flex-direction: row;
-  align-items: center;
-  background-color: ${props => props.verified ? '#E8F5E9' : '#FFF3E0'};
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-`;
+// Create a custom component that wraps View and handles the verified prop
+const VerificationContainer = (props: { verified: boolean; children: React.ReactNode }) => {
+  const { verified, children, ...rest } = props;
+  return (
+    <View 
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: verified ? '#E8F5E9' : '#FFF3E0',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 16,
+      }}
+      {...rest}
+    >
+      {children}
+    </View>
+  );
+};
 
-// Create a properly typed styled component with the VerificationProps
-const VerificationText = styled(Text)<VerificationProps>`
-  flex: 1;
-  color: ${props => props.verified ? '#2E7D32' : '#E65100'};
-  font-weight: 500;
-`;
+// Create a custom component that wraps Text and handles the verified prop
+const VerificationText = (props: { verified: boolean; children: React.ReactNode }) => {
+  const { verified, children, ...rest } = props;
+  return (
+    <Text 
+      style={{
+        flex: 1,
+        color: verified ? '#2E7D32' : '#E65100',
+        fontWeight: '500',
+      }}
+      {...rest}
+    >
+      {children}
+    </Text>
+  );
+};
 
 interface CompanyProfileFormProps {
   initialData?: CompanyProfile;
